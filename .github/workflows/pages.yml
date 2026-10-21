@@ -1,0 +1,35 @@
+name: Publish confirmed Osaka journal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Prepare only approved website files
+        run: |
+          mkdir _site
+          cp index.html config.js cloud.js sync-core.js outbox.js itinerary-core.js itinerary.js bookkeeping-core.js bookkeeping.js coupons.js wish-images.js manifest.webmanifest apple-touch-icon.png icon-192.png icon-512.png .nojekyll _site/
+          cp -R vendor _site/vendor
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
